@@ -60,7 +60,7 @@ which appends the whole environment to a temporary dump file:
 
 Store the udev rule in the rules directory `/etc/udev/rules.d/99-sd-autocopy.rules`:
 
-  SUBSYSTEM=="block", ACTION=="add", RUN="/usr/local/bin/sd-autocopy"
+    SUBSYSTEM=="block", ACTION=="add", RUN="/usr/local/bin/sd-autocopy"
 
 The udev daemon should recognize that rule immediately. If a restart of the
 udev daemon might help.
@@ -68,13 +68,13 @@ udev daemon might help.
 Now create the script to dump the environment at the path specified in the
 udev rule `/usr/local/bin/sd-autocopy`:
 
-  #!/bin/bash
-  echo ======================== >> /tmp/test
-  env >> /tmp/test
+    #!/bin/bash
+    echo ======================== >> /tmp/test
+    env >> /tmp/test
 
 Then make the script executable:
 
-  chmod +x /usr/local/bin/sd-autocopy
+    chmod +x /usr/local/bin/sd-autocopy
 
 Now simply plug the SD card of your choice into your SD card reader and have a
 look at the contents of `/tmp/test` afterwards. The file should contain
@@ -87,46 +87,46 @@ is one `ADD` event for the added disk and one `ADD` event for each partition.
 We are only interested in the partition events and need the first partition of
 the device, so add the following conditions to the udev rule:
 
-  ENV{DEVTYPE}=="partition", ENV{UDISKS_PARTITION_NUMBER}=="1"
+    ENV{DEVTYPE}=="partition", ENV{UDISKS_PARTITION_NUMBER}=="1"
 
 which should result in this rule:
 
-  SUBSYSTEM=="block", ACTION=="add", ENV{DEVTYPE}=="partition", ENV{UDISKS_PARTITION_NUMBER}=="1", RUN="/usr/local/bin/sd-autocopy"
+    SUBSYSTEM=="block", ACTION=="add", ENV{DEVTYPE}=="partition", ENV{UDISKS_PARTITION_NUMBER}=="1", RUN="/usr/local/bin/sd-autocopy"
 
 After changing the rule, deleting the `/tmp/test` file and an additional test
 we can see that the test sd-autocopy script gets only called with the correct
 event. This event comes with the following environment variables:
 
-  DEVTYPE=partition
-  SUBSYSTEM=block
-  ID_SERIAL=0x000006d4
-  ID_FS_UUID=F84E-1690
-  UDISKS_PARTITION_OFFSET=4194304
-  DEVPATH=/devices/pci0000:00/0000:00:1e.0/0000:15:00.2/mmc_host/mmc0/mmc0:b368/block/mmcblk0/mmcblk0p1
-  UDISKS_PARTITION_NUMBER=1
-  ID_FS_VERSION=FAT32
-  MINOR=1
-  ACTION=add
-  PWD=/
-  UDISKS_PARTITION_ALIGNMENT_OFFSET=0
-  ID_FS_TYPE=vfat
-  ID_NAME=SDC
-  MAJOR=179
-  DEVLINKS=/dev/disk/by-id/mmc-SDC_0x000006d4-part1 /dev/disk/by-path/pci-0000:15:00.2-part1 /dev/disk/by-uuid/F84E-1690
-  DEVNAME=/dev/mmcblk0p1
-  SHLVL=1
-  ID_FS_USAGE=filesystem
-  ID_PART_TABLE_TYPE=dos
-  UDISKS_PRESENTATION_NOPOLICY=0
-  UDISKS_PARTITION_SIZE=16130244608
-  ID_FS_UUID_ENC=F84E-1690
-  UDISKS_PARTITION_SCHEME=mbr
-  UDISKS_PARTITION_TYPE=0x0c
-  UDISKS_PARTITION=1
-  UDISKS_PARTITION_SLAVE=/sys/devices/pci0000:00/0000:00:1e.0/0000:15:00.2/mmc_host/mmc0/mmc0:b368/block/mmcblk0
-  ID_PATH=pci-0000:15:00.2
-  SEQNUM=2825
-  _=/usr/bin/env
+    DEVTYPE=partition
+    SUBSYSTEM=block
+    ID_SERIAL=0x000006d4
+    ID_FS_UUID=F84E-1690
+    UDISKS_PARTITION_OFFSET=4194304
+    DEVPATH=/devices/pci0000:00/0000:00:1e.0/0000:15:00.2/mmc_host/mmc0/mmc0:b368/block/mmcblk0/mmcblk0p1
+    UDISKS_PARTITION_NUMBER=1
+    ID_FS_VERSION=FAT32
+    MINOR=1
+    ACTION=add
+    PWD=/
+    UDISKS_PARTITION_ALIGNMENT_OFFSET=0
+    ID_FS_TYPE=vfat
+    ID_NAME=SDC
+    MAJOR=179
+    DEVLINKS=/dev/disk/by-id/mmc-SDC_0x000006d4-part1 /dev/disk/by-path/pci-0000:15:00.2-part1 /dev/disk/by-uuid/F84E-1690
+    DEVNAME=/dev/mmcblk0p1
+    SHLVL=1
+    ID_FS_USAGE=filesystem
+    ID_PART_TABLE_TYPE=dos
+    UDISKS_PRESENTATION_NOPOLICY=0
+    UDISKS_PARTITION_SIZE=16130244608
+    ID_FS_UUID_ENC=F84E-1690
+    UDISKS_PARTITION_SCHEME=mbr
+    UDISKS_PARTITION_TYPE=0x0c
+    UDISKS_PARTITION=1
+    UDISKS_PARTITION_SLAVE=/sys/devices/pci0000:00/0000:00:1e.0/0000:15:00.2/mmc_host/mmc0/mmc0:b368/block/mmcblk0
+    ID_PATH=pci-0000:15:00.2
+    SEQNUM=2825
+    _=/usr/bin/env
 
 The sd-autocopy script
 ----------------------
@@ -149,13 +149,13 @@ README file.
 
 The script can easily be extended by modifying the first few lines:
 
-  USER=lm
-  TARGET=/home/$USER/Pictures/Photos
-  HANDLED_SERIALS="0x000006d4"
-  MOUNT=/mnt/sd-autocopy
-  FILE_MATCH=".*\.(jpg|cr2)$"
-  # Move or copy - or something different
-  TRANSFER=mv
+    USER=lm
+    TARGET=/home/$USER/Pictures/Photos
+    HANDLED_SERIALS="0x000006d4"
+    MOUNT=/mnt/sd-autocopy
+    FILE_MATCH=".*\.(jpg|cr2)$"
+    # Move or copy - or something different
+    TRANSFER=mv
 
 * `USER` is needed a) for gathering the target directory and b) for owning the copied files.
 * `TARGET` holds the path to the target base directory.
