@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# sd-autocopy - Copies/Moves images automatically from inserted media
+#
+# Copyright (c) 2011 Lars Michelsen <lm@larsmichelsen.com>
+#
+# License:
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+# Put this in curly braces and detach the whole block to background
+# for not blocking udev during copying.
+{
+
+USER=lm
+TARGET=/home/$USER/Pictures/Photos
+HANDLED_SERIALS="0x000006d4"
+MOUNT=/mnt/sd-autocopy
+FILE_MATCH=".*\.(jpg|cr2)$"
+TRANSFER=mv
+
+# END OF CONFIGURATION ########################################################
+
+# DEBUG:
+# To enable debugging without udev events uncomment the lines below
+#ID_SERIAL=0x000006d4
+#DEVNAME=/dev/mmcblk0p1
+
+# Catch unset but needed vars - terminate script
+if [ -z "$ID_SERIAL" ] || [ -z "$DEVNAME" ]; then
+    exit 1
+fi
+
+if ! echo "$HANDLED_SERIALS" | grep $ID_SERIAL >/dev/null 2>&1; then
+    logger -t sd-autocopy "Got unhandled serial, skipping (Serial: $ID_SERIAL)"
+    exit 1
+fi
+
+logger -t sd-autocopy "Got handled serial ($ID_SERIAL), moving images..."
+
+if [ ! -d "$MOUNT" ]; then
+    mkdir -p "$MOUNT"
+fi
+
+mount $DEVNAME "$MOUNT"
+
+LINES=$(find "$MOUNT" -regextype posix-egrep -iregex "$FILE_MATCH" -printf "%TY-%Tm-%Td_%p\n")
+DATES=$(echo "$LINES" | cut -d_ -f1 | uniq)
+
+# First create the directories when missing
+for DATE in $DATES; do
+    echo $DATE
+    mkdir -p "$TARGET/$DATE"
+done
+
+# Move the images
+NUM=0
+for LINE in $LINES; do
+    DATE=${LINE%%_*}
+    FILE=${LINE#*_}
+    logger -t sd-autocopy "Moving $FILE to $TARGET/$DATE"
+    $TRANSFER "$FILE" "$TARGET/$DATE"
+    NUM=$(($NUM+1))
+done
+
+umount $DEVNAME
+
+# Fix the permissions for all directories recursive where
+# files have been copied/moved to
+for DATE in $DATES; do
+    chown -R $USER.$USER "$TARGET/$DATE"
+done
+
+logger -t sd-autocopy "Finished job. Moved $NUM images."
+
+} &
+exit 0
